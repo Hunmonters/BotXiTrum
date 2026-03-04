@@ -195,24 +195,23 @@ client.on('interactionCreate', async (interaction) => {
               .setURL(`https://steamdb.info/app/${appId}`)
           );
 
-        // Gửi embed chính
-        await interaction.editReply({
-          embeds: [embed],
-          components: [buttons]
-        });
-
-        // Tìm trailer trên YouTube và gửi riêng để Discord tự embed video
+        // Tìm trailer YouTube
+        let trailerContent = '';
         try {
           const ytResults = await YouTube.search(`${data.name} official trailer`, { limit: 1, type: 'video' });
           if (ytResults.length > 0) {
-            const videoUrl = `https://www.youtube.com/watch?v=${ytResults[0].id}`;
-            await interaction.followUp({
-              content: `🎬 **Trailer — ${data.name}**\n${videoUrl}`
-            });
+            trailerContent = `🎬 **Trailer — ${data.name}**\nhttps://www.youtube.com/watch?v=${ytResults[0].id}`;
           }
         } catch (ytError) {
           console.error('YouTube search error:', ytError.message);
         }
+
+        // Gửi embed + trailer gộp chung 1 message
+        await interaction.editReply({
+          content: trailerContent || undefined,
+          embeds: [embed],
+          components: [buttons]
+        });
 
       } catch (steamError) {
         console.error('Steam API Error:', steamError.message);
