@@ -133,7 +133,7 @@ client.on('interactionCreate', async (interaction) => {
             discountText = `~~${p.initial_formatted}~~ → **${p.final_formatted}**`;
             priceText = `🔥 **-${p.discount_percent}%**  ${discountText}`;
           } else {
-            priceText = `💰 **${p.final_formatted}**`;
+            priceText = `💵 **${p.final_formatted}**`;
           }
         }
 
@@ -156,16 +156,6 @@ client.on('interactionCreate', async (interaction) => {
         const meta = data.metacritic
           ? `⭐ **${data.metacritic.score}/100** [Metacritic](${data.metacritic.url})`
           : '⭐ Chưa có đánh giá Metacritic';
-
-        // ── Trailer ──
-        let trailerText = '';
-        if (data.movies && data.movies.length > 0) {
-          const trailer = data.movies[0];
-          const trailerUrl = trailer.mp4?.max || trailer.mp4?.['480'] || trailer.webm?.max || '';
-          if (trailerUrl) {
-            trailerText = `🎬 [Xem Trailer](${trailerUrl})`;
-          }
-        }
 
         // ── Ảnh header ──
         const headerImg = data.header_image || '';
@@ -204,16 +194,22 @@ client.on('interactionCreate', async (interaction) => {
               .setURL(`https://steamdb.info/app/${appId}`)
           );
 
-        // Thêm trailer button nếu có
-        if (trailerText) {
-          // Không thể add button với trailer video trực tiếp, nên add vào embed field
-          embed.addFields({ name: '🎬 Trailer', value: trailerText, inline: false });
-        }
-
+        // Gửi embed chính
         await interaction.editReply({
           embeds: [embed],
           components: [buttons]
         });
+
+        // Gửi trailer video riêng để Discord tự hiển thị video player
+        if (data.movies && data.movies.length > 0) {
+          const trailer = data.movies[0];
+          const trailerUrl = trailer.mp4?.max || trailer.mp4?.['480'] || '';
+          if (trailerUrl) {
+            await interaction.followUp({
+              content: `🎬 **Trailer — ${data.name}**\n${trailerUrl}`
+            });
+          }
+        }
 
       } catch (steamError) {
         console.error('Steam API Error:', steamError.message);
