@@ -13,6 +13,7 @@ const {
 } = require('discord.js');
 const axios = require('axios');
 const translate = require('google-translate-api-x');
+const YouTube = require('youtube-sr').default;
 
 // Hàm dịch sang tiếng Việt
 async function toVietnamese(text) {
@@ -200,15 +201,17 @@ client.on('interactionCreate', async (interaction) => {
           components: [buttons]
         });
 
-        // Gửi trailer video riêng để Discord tự hiển thị video player
-        if (data.movies && data.movies.length > 0) {
-          const trailer = data.movies[0];
-          const trailerUrl = trailer.mp4?.max || trailer.mp4?.['480'] || '';
-          if (trailerUrl) {
+        // Tìm trailer trên YouTube và gửi riêng để Discord tự embed video
+        try {
+          const ytResults = await YouTube.search(`${data.name} official trailer`, { limit: 1, type: 'video' });
+          if (ytResults.length > 0) {
+            const videoUrl = `https://www.youtube.com/watch?v=${ytResults[0].id}`;
             await interaction.followUp({
-              content: `🎬 **Trailer — ${data.name}**\n${trailerUrl}`
+              content: `🎬 **Trailer — ${data.name}**\n${videoUrl}`
             });
           }
+        } catch (ytError) {
+          console.error('YouTube search error:', ytError.message);
         }
 
       } catch (steamError) {
